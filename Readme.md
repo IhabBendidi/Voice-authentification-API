@@ -34,3 +34,12 @@ The voiceprintid is returned in the first API calls
 - For the 1-to-1 authentification, the curl request is :
 `curl -X POST -F audio_file=@voice_database/unknown/flute.wav -F voiceModel=@gmm_models/ihab.gmm 'http://127.0.0.1:5000/api/voiceident/authentication?username=ihab&voiceprintId=5df8cb542e276886223cbe36'
 `
+
+
+
+
+
+
+
+
+python3 create_enrollement_input.py -a voice_database/ihab/recording.wav -b voice_database/unknown/flute.wav -c voice_database/ihab/recording.wav

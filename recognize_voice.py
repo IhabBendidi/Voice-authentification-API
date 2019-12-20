@@ -59,7 +59,7 @@ def extract_features(audio,rate):
 def recognize(filename,username):
     # Voice Authentication
     FORMAT = pyaudio.paInt16
-    CHANNELS = 2
+    CHANNELS = 1
     RATE = 44100
     CHUNK = 1024
     RECORD_SECONDS = 3
@@ -123,7 +123,7 @@ def recognize(filename,username):
 
 def reconize_with_model(filename,model,username):
     FORMAT = pyaudio.paInt16
-    CHANNELS = 2
+    CHANNELS = 1
     RATE = 44100
     CHUNK = 1024
     RECORD_SECONDS = 3

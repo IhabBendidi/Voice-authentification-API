@@ -74,9 +74,23 @@ def enroll():
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
         return output
+    #recording = json.loads(audio_file)
+    #print(recording)
     filename = secure_filename(audio_file.filename)
     audio_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    gmm,gmm_model_path = add_user(username,os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    recording = json.load(open(os.path.join(app.config['UPLOAD_FOLDER'], filename),'rb'))
+    record1 = recording['record1']
+    record2 = recording['record2']
+    record3 = recording['record3']
+    recording1 = base64.b64decode(record1)
+    recording2 = base64.b64decode(record2)
+    recording3 = base64.b64decode(record3)
+    #print(recording2)
+    filename2 = "recording1.wav"
+    with open(os.path.join(app.config['UPLOAD_FOLDER'],filename2), 'wb') as recording_file:
+        recording_file.write(recording1)
+
+    gmm,gmm_model_path = add_user(username,os.path.join(app.config['UPLOAD_FOLDER'], filename2))
     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     #send_file(gmm_model_path, attachment_filename= 'ma.gmm')
     #model = json.loads(open(gmm_model_path,'rb'))
