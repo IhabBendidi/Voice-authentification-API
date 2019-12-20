@@ -38,6 +38,7 @@ app.config["DEBUG"] = True
 
 @app.route('/api/voiceident/enrollments', methods=['POST'])
 def enroll():
+    status = 200
     output = {}
     record = {}
     if 'audio_file' not in request.files:
@@ -46,7 +47,7 @@ def enroll():
         output['DecisionReason']="AUDIO_FILE_NOT_SENT"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
 
 
     audio_file = request.files['audio_file']
@@ -57,14 +58,14 @@ def enroll():
         output['DecisionReason']="MISSING_ARGUMENTS"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     if audio_file.filename == '':
         output['trained'] = "failed"
         output['EnrollStatus'] = "REJECTED"
         output['DecisionReason']="INEXISTANT_FILENAME"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
 
     username = request.args.get('username')
     if username == '':
@@ -73,7 +74,7 @@ def enroll():
         output['DecisionReason']="INEXISTANT_USERNAME"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     #recording = json.loads(audio_file)
     #print(recording)
     filename = secure_filename(audio_file.filename)
@@ -118,7 +119,7 @@ def enroll():
         output['DecisionReason']="ERROR_TRAINING_THE_MODEL"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     else :
         # Saving needed data in mongodb
         record['username'] = username
@@ -142,7 +143,7 @@ def enroll():
         output['EnrollStatus'] = "ACCEPTED"
         output['DecisionReason']="Accepted"
 
-    return output
+    return output,status
 
 
 
@@ -150,6 +151,7 @@ def enroll():
 
 @app.route('/api/voiceident/enrollments', methods=['GET'])
 def check_enroll():
+    status = 200
     output = {}
     if 'username' not  in request.args:
         output['trained'] = "failed"
@@ -157,14 +159,14 @@ def check_enroll():
         output['DecisionReason']="MISSING_ARGUMENTS"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     if 'voiceprintId' not  in request.args:
         output['trained'] = "failed"
         output['EnrollStatus'] = "REJECTED"
         output['DecisionReason']="MISSING_ARGUMENTS"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     voiceprintId = request.args.get('voiceprintId')
     username = request.args.get('username')
     record = users.find_one({'_id':ObjectId(voiceprintId)})
@@ -175,7 +177,7 @@ def check_enroll():
         output['DecisionReason']="ERROR_TRAINING_THE_MODEL"
         output['voiceprintId'] = ""
         output['voiceModel'] = ""
-        return output
+        return output,status
     else:
         with open(gmm_model_path, 'rb') as binary_file:
             binary_file_data = binary_file.read()
@@ -185,7 +187,7 @@ def check_enroll():
             output['voiceModel'] = base64_encoded_data
             output['EnrollStatus'] = "ACCEPTED"
             output['DecisionReason']="Accepted"
-            return output
+            return output,status
 
 
 
@@ -193,11 +195,13 @@ def check_enroll():
 @app.route('/api/voiceident/authentication', methods=['POST'])
 def authentificate():
     output = {}
+    status = 200
     if 'audio_file' not in request.files:
+        status = 403
         output['score'] = None
         output['Decision'] = "MISMATCH"
         output['DecisionReason']="AUDIO_FILE_NOT_SENT"
-        return output
+        return output,status
 
 
 
@@ -205,21 +209,24 @@ def authentificate():
     audio_file = request.files['audio_file']
 
     if audio_file.filename == '':
+        status = 403
         output['score'] = None
         output['Decision'] = "MISMATCH"
         output['DecisionReason']="INEXISTANT_FILENAME"
-        return output
+        return output,status
     if 'username' not  in request.args:
+        status = 464
         output['score'] = None
         output['Decision'] = "MISMATCH"
         output['DecisionReason']="MISSING_ARGUMENTS"
-        return output
+        return output,status
 
     if 'voiceprintId' not  in request.args:
+        status = 464
         output['score'] = None
         output['Decision'] = "MISMATCH"
         output['DecisionReason']="MISSING_ARGUMENTS"
-        return output
+        return output,status
 
     filename = secure_filename(audio_file.filename)
     audio_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -239,10 +246,11 @@ def authentificate():
     username = request.args.get('username')
     record = users.find_one({'username':username})
     if record == None:
+        status = 464
         output['score'] = None
         output['Decision'] = "MISMATCH"
         output['DecisionReason']="INEXISTANT_USERNAME"
-        return output
+        return output,status
 
 
 
@@ -267,7 +275,7 @@ def authentificate():
             output['score'] = round(score*100,2)
             output['Decision'] = "MISMATCH"
             output['DecisionReason']="BIOMETRIC_MISMATCH"
-        return output
+        return output,status
     else:
         identity,score = recognize(os.path.join(app.config['UPLOAD_FOLDER'], filen),username)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -280,7 +288,7 @@ def authentificate():
             output['score'] = round(score*100,2)
             output['Decision'] = "MISMATCH"
             output['DecisionReason']="BIOMETRIC_MISMATCH"
-        return output
+        return output,status
 
 
 
