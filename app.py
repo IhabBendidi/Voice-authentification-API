@@ -82,18 +82,36 @@ def enroll():
     record1 = recording['record1']
     record2 = recording['record2']
     record3 = recording['record3']
-    recording1 = base64.b64decode(record1)
-    recording2 = base64.b64decode(record2)
-    recording3 = base64.b64decode(record3)
-    #print(recording2)
-    filename2 = "recording1.wav"
-    with open(os.path.join(app.config['UPLOAD_FOLDER'],filename2), 'wb') as recording_file:
-        recording_file.write(recording1)
+    base_records = []
+    base_records.append(base64.b64decode(record1))
+    base_records.append(base64.b64decode(record2))
+    base_records.append(base64.b64decode(record3))
 
-    gmm,gmm_model_path = add_user(username,os.path.join(app.config['UPLOAD_FOLDER'], filename2))
+    recordings = []
+    filename0 = "recording0.wav"
+    filename1 = "recording1.wav"
+    for recording1 in base_records:
+        with open(os.path.join(app.config['UPLOAD_FOLDER'],filename1), 'wb') as recording_file:
+            recording_file.write(recording1)
+        w = wave.open(os.path.join(app.config['UPLOAD_FOLDER'],filename1), 'rb')
+        recordings.append( [w.getparams(), w.readframes(w.getnframes())] )
+        w.close()
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename1))
+
+
+
+    outputFile = wave.open(os.path.join(app.config['UPLOAD_FOLDER'], filename0), 'wb')
+    outputFile.setparams(recordings[0][0])
+    outputFile.writeframes(recordings[0][1])
+    outputFile.writeframes(recordings[1][1])
+    outputFile.writeframes(recordings[2][1])
+    outputFile.close()
+
+
+    gmm,gmm_model_path = add_user(username,os.path.join(app.config['UPLOAD_FOLDER'], filename0))
     os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    #send_file(gmm_model_path, attachment_filename= 'ma.gmm')
-    #model = json.loads(open(gmm_model_path,'rb'))
+    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename0))
+
     if gmm_model_path == '':
         output['trained'] = "failed"
         output['EnrollStatus'] = "REJECTED"
@@ -205,6 +223,19 @@ def authentificate():
 
     filename = secure_filename(audio_file.filename)
     audio_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    recording = json.load(open(os.path.join(app.config['UPLOAD_FOLDER'], filename),'rb'))
+    auth_record = base64.b64decode(recording['record'])
+    filen = "auth.wav"
+    with open(os.path.join(app.config['UPLOAD_FOLDER'],filen), 'wb') as recording_file:
+        recording_file.write(auth_record)
+
+    try :
+        model = recording['voiceModel']
+    except:
+        model = None
+
+
+
     username = request.args.get('username')
     record = users.find_one({'username':username})
     if record == None:
@@ -215,14 +246,19 @@ def authentificate():
 
 
 
-    if 'voiceModel'  in request.files:
+    if model is not None:
 
         unknown_path = 'gmm_models/unknown.gmm'
         copyfile(unknown_path, 'temp/models/unknown.gmm')
-        gmm = request.files['voiceModel']
-        gmm.save("./temp/models/"+username+".gmm")
-        identity,score = reconize_with_model(os.path.join(app.config['UPLOAD_FOLDER'], filename),"./temp/models/",username)
+        gmm_model = base64.b64decode(model)
+        with open("./temp/models/" + username + '.gmm', 'wb') as model_file:
+            model_file.write(gmm_model)
+        #gmm = request.files['voiceModel']
+        #gmm.save("./temp/models/"+username+".gmm")
+        identity,score = reconize_with_model(os.path.join(app.config['UPLOAD_FOLDER'], filen),"./temp/models/",username)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filen))
+        os.remove("./temp/models/" + username + '.gmm')
         if identity == username:
             output['score'] = round(score*100,2)
             output['Decision'] = "MATCH"
@@ -233,8 +269,9 @@ def authentificate():
             output['DecisionReason']="BIOMETRIC_MISMATCH"
         return output
     else:
-        identity,score = recognize(os.path.join(app.config['UPLOAD_FOLDER'], filename),username)
+        identity,score = recognize(os.path.join(app.config['UPLOAD_FOLDER'], filen),username)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filen))
         if identity == username:
             output['score'] = round(score*100,2)
             output['Decision'] = "MATCH"

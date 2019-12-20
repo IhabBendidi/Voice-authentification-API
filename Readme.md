@@ -15,7 +15,7 @@ You can launch the server on the terminal with :
 All API responses are the same as specified in the specifications
 
 - For the main enrollment, this is an example of the curl request to send :
-`curl -X POST -F audio_file=@voice_database/ihab/recording.wav 'http://127.0.0.1:5000/api/voiceident/enrollments?username=ihab'
+`curl -X POST -F audio_file=@enrollement.json 'http://127.0.0.1:5000/api/voiceident/enrollments?username=ihab'
 `
 
 You can specify the username you desire, as well as the path for the audio file you would like to use.
@@ -43,3 +43,9 @@ The voiceprintid is returned in the first API calls
 
 
 python3 create_enrollement_input.py -a voice_database/ihab/recording.wav -b voice_database/unknown/flute.wav -c voice_database/ihab/recording.wav
+
+curl -X POST -F audio_file=@enrollement.json 'http://127.0.0.1:5000/api/voiceident/enrollments?username=ihab'
+
+python3 create_auth_input.py -a voice_database/unknown/flute.wav -b gmm_models/ihab.gmm
+
+curl -X POST -F audio_file=@auth.json 'http://127.0.0.1:5000/api/voiceident/authentication?username=ihab&voiceprintId=5df8cb542e276886223cbe36'
