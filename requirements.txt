@@ -3,12 +3,9 @@ IPython
 wave
 scikit-learn
 numpy
-warnings
-pickle
-json
+
 python_speech_features
 flask
 Werkzeug
 pymongo
 bson
-shutil
