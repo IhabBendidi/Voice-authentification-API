@@ -137,44 +137,48 @@ def reconize_with_model(filename,model,username):
     #modelpath = "./temp/models/"
 
 
-    gmm_files = [os.path.join(modelpath,fname) for fname in
-                os.listdir(modelpath) if fname.endswith('.gmm')]
+    #gmm_files = [os.path.join(modelpath,fname) for fname in
+                #os.listdir(modelpath) if fname.endswith('.gmm')]
 
-    models    = [pickle.load(open(fname,'rb')) for fname in gmm_files]
+    models    = pickle.load(open(modelpath,'rb'))
 
-    speakers   = [fname.split("/")[-1].split(".gmm")[0] for fname
-                in gmm_files]
+    #speakers   = [fname.split("/")[-1].split(".gmm")[0] for fname
+                #in gmm_files]
 
-    if len(models) == 0:
-        print("No Users in the Database!")
-        return
+    #if len(models) == 0:
+        #print("No Users in the Database!")
+        #return
 
     #read test file
     sr,audio = read(FILENAME)
 
     # extract mfcc features
     vector = extract_features(audio,sr)
-    log_likelihood = np.zeros(len(models))
+    log_likelihood = 0
 
     #checking with each model one by one
     #scorer = 0
-    for i in range(len(models)):
-        gmm = models[i]
-        scores = np.array(gmm.score(vector))
-        log_likelihood[i] = scores.sum()
-        if speakers[i] == username:
-            scorer = log_likelihood[i]
-        print("\n\n\n")
-        print(speakers[i])
-        print(log_likelihood[i])
+    #for i in range(len(models)):
+    gmm = models
+    scores = np.array(gmm.score(vector))
+    log_likelihood = scores.sum()/len(scores)
+    #if speakers[i] == username:
+        #scorer = log_likelihood[i]
+    print("\n\n\n")
+    #print(speakers[i])
+    print(log_likelihood)
 
-    pred = np.argmax(log_likelihood)
-    identity = speakers[pred]
-    maximum = max(log_likelihood)
-    minimum = min(log_likelihood)
+    #pred = np.argmax(log_likelihood)
+    if log_likelihood > -4:
+        identity = username
+    else :
+        identity = "Unknown"
+    maximum = 0
+    minimum = -30
 
-    score = (2*(scorer - minimum)/(maximum - minimum)) - 1
+    score = (2*(log_likelihood - minimum)/(maximum - minimum)) - 1
     #score = int(score)
+    #score = log_likelihood
 
 
     # if voice not recognized than terminate the process

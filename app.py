@@ -263,7 +263,8 @@ def authentificate():
             model_file.write(gmm_model)
         #gmm = request.files['voiceModel']
         #gmm.save("./temp/models/"+username+".gmm")
-        identity,score = reconize_with_model(os.path.join(app.config['UPLOAD_FOLDER'], filen),"./temp/models/",username)
+        the_model_path = "temp/models/"+ username + ".gmm"
+        identity,score = reconize_with_model(os.path.join(app.config['UPLOAD_FOLDER'], filen),"./temp/models/"+ username + ".gmm",username)
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filen))
         os.remove("./temp/models/" + username + '.gmm')
