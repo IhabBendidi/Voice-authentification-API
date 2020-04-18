@@ -1,5 +1,9 @@
 # Voice authentification with GMM models:
 
+### Context 
+An API for voice based authentification, using GMM models and MFCC extraction, to create unique uservoice fingerprint. The model requires three audios (3-5 seconds) of a person for registration, and one audio for authentification. It exposes an API for 1 to 1 authentification, as well as 1 to N authentification.
+The audios sent on the api are automatically encoded for security purposes.
+
 ### Installation :
 After installing Python 3 and pip3, Please launch the following bash file to install all requirements (it has only been tested on Linux systems):
 
